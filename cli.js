@@ -15,7 +15,7 @@ if (process.argv.length < 3) {
         const input = process.argv[2]
         if (showCode) {
             console.log(generateCode(parse(input)))
-            console.log("\n---\n")
+            console.log("---")
         }
 
         evaluate(input)
