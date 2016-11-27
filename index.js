@@ -147,7 +147,12 @@ function generateCode(ast) {
 }
 
 function evaluate(input) {
-    return eval(generateCode(parse(input)))
+    try {
+        return eval(generateCode(parse(input)))
+    } catch (e) {
+        console.trace()
+        throw `Exception in resulting code: ${e.name}: ${e.message}`
+    }
 }
 
 module.exports = {

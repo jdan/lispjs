@@ -182,4 +182,10 @@ describe("evaluate", () => {
     it("should evaluate nested function calls", () => {
         assert.equal(10, evaluate("(Math.max 1 3 (Math.max 5 10) 8 9)"))
     })
+
+    it("should throw for invalid JS output", () => {
+        assert.throws(() => {
+            evaluate("(nada 1 2 3)")
+        }, /Exception in resulting code/)
+    })
 })
