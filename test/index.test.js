@@ -1,3 +1,9 @@
+/**
+ * Unit tests
+ *
+ * Protip: Read this from bottom to top to get a decent feel for how the code works.
+ */
+
 const assert = require("assert")
 const { describe, it } = require("mocha")
 
@@ -6,6 +12,7 @@ const {
     findClosingToken,
     getSExpressions,
     parse,
+    generateCode,
 } = require("../")
 
 describe("tokenizer", () => {
@@ -138,5 +145,16 @@ describe("parser", () => {
                 ],
             }],
         })
+    })
+})
+
+describe("generateCode", () => {
+    it("should pipe through simple statements", () => {
+        assert.equal(generateCode(parse("10")), "10")
+        assert.equal(generateCode(parse("1 2 3")), "1;2;3")
+    })
+
+    it("should generate function calls", () => {
+        assert.equal(generateCode(parse("(plus 1 2 3)")), "plus(1,2,3)")
     })
 })

@@ -1,3 +1,7 @@
+/**
+ *  Let's parse some lisp
+ */
+
 function tokenize(str) {
     const tokens = []
 
@@ -127,9 +131,21 @@ function parseSExpressions(expression) {
     }
 }
 
+function generateCode(ast) {
+    switch (ast.type) {
+        case "Program":
+            return ast.body.map(generateCode).join(";")
+        case "FunctionExpression":
+            return `${ast.name.content}(${ast.args.map(generateCode).join(",")})`
+        case "Statement":
+            return ast.content
+    }
+}
+
 module.exports = {
     tokenize,
     findClosingToken,
     getSExpressions,
     parse,
+    generateCode,
 }
