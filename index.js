@@ -1,6 +1,6 @@
 function tokenize(str) {
     const tokens = []
-    
+
     let curr = {
         token: null,
         pos: null,
@@ -28,7 +28,7 @@ function tokenize(str) {
     }
 
     for (let i = 0; i < str.length; i++) {
-        switch(str[i]) {
+        switch (str[i]) {
             case "(":
                 flushCurr()
                 tokens.push({ type: "open", token: str[i], pos: i })
@@ -53,6 +53,54 @@ function tokenize(str) {
     return tokens
 }
 
+function findClosingToken(tokens) {
+    let depth = 1
+    for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i].type === "open") {
+            depth++
+        } else if (tokens[i].type === "close") {
+            depth--
+        }
+
+        if (depth === 0) {
+            return i
+        }
+    }
+
+    return -1
+}
+
+function getSExpressions(str) {
+    return getSExpressionsTokens(tokenize(str))
+}
+
+function getSExpressionsTokens(tokens) {
+    const expressions = []
+
+    for (let i = 0; i < tokens.length; i++) {
+        switch(tokens[i].type) {
+            case "open":
+                const closeIndex = findClosingToken(tokens.slice(i + 1))
+                if (closeIndex === -1) {
+                    throw "Unmatched parenthesis at character " + tokens[i].pos
+                }
+
+                expressions.push(
+                    getSExpressionsTokens(tokens.slice(i + 1, i + closeIndex + 1)))
+                i = i + closeIndex + 1
+
+                break
+            default:
+                expressions.push(tokens[i])
+                break
+        }
+    }
+
+    return expressions
+}
+
 module.exports = {
     tokenize,
+    findClosingToken,
+    getSExpressions,
 }
