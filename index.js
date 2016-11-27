@@ -99,8 +99,37 @@ function getSExpressionsTokens(tokens) {
     return expressions
 }
 
+function parse(str) {
+    const expressions = getSExpressions(str)
+
+    return {
+        type: "Program",
+        body: expressions.map(parseSExpressions),
+    }
+}
+
+function parseSExpressions(expression) {
+    if (Array.isArray(expression)) {
+        return {
+            type: "FunctionExpression",
+            name: {
+                content: expression[0].token,
+                pos: expression[0].pos,
+            },
+            args: expression.slice(1).map(parseSExpressions),
+        }
+    } else {
+        return {
+            type: "Statement",
+            content: expression.token,
+            pos: expression.pos,
+        }
+    }
+}
+
 module.exports = {
     tokenize,
     findClosingToken,
     getSExpressions,
+    parse,
 }

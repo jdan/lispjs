@@ -1,6 +1,12 @@
 const assert = require("assert")
 const { describe, it } = require("mocha")
-const { tokenize, findClosingToken, getSExpressions } = require("../")
+
+const {
+    tokenize,
+    findClosingToken,
+    getSExpressions,
+    parse,
+} = require("../")
 
 describe("tokenizer", () => {
     it("should tokenize characters", () => {
@@ -71,5 +77,66 @@ describe("s-expression generator", () => {
 
     it("should always return an array", () => {
         assert.deepEqual(getSExpressions(""), [])
+    })
+})
+
+describe("parser", () => {
+    it("should evaluate single statements", () => {
+        assert.deepEqual(parse("1"), {
+            type: "Program",
+            body: [{
+                type: "Statement",
+                content: "1",
+                pos: 0,
+            }],
+        })
+    })
+
+    it("should evaluate multiple statements", () => {
+        assert.deepEqual(parse(`"hello"\n"world"`), {
+            type: "Program",
+            body: [
+                {
+                    type: "Statement",
+                    content: `"hello"`,
+                    pos: 0,
+                },
+                {
+                    type: "Statement",
+                    content: `"world"`,
+                    pos: 8,
+                },
+            ],
+        })
+    })
+
+    it("should evaluate function calls", () => {
+        assert.deepEqual(parse("(+ 3 4 5)"), {
+            type: "Program",
+            body: [{
+                type: "FunctionExpression",
+                name: {
+                    content: "+",
+                    pos: 1,
+                },
+                args: [
+                    {
+                        type: "Statement",
+                        content: "3",
+                        pos: 3,
+                    },
+                    {
+                        type: "Statement",
+                        content: "4",
+                        pos: 5,
+                    },
+                    {
+                        type: "Statement",
+                        content: "5",
+                        pos: 7,
+                    },
+                ],
+            }],
+        })
     })
 })
