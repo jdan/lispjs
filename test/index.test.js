@@ -85,6 +85,12 @@ describe("s-expression generator", () => {
     it("should always return an array", () => {
         assert.deepEqual(getSExpressions(""), [])
     })
+
+    it("should fail for invalid s-expressions", () => {
+        assert.throws(() => { getSExpressions("(+ 1 2") }, /Unmatched opening/)
+        assert.throws(() => { getSExpressions("(+ 1 2()") }, /Unmatched opening/)
+        assert.throws(() => { getSExpressions("(+ 1 2))") }, /Unmatched closing/)
+    })
 })
 
 describe("parser", () => {

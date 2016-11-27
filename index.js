@@ -86,7 +86,7 @@ function getSExpressionsTokens(tokens) {
             case "open":
                 const closeIndex = findClosingToken(tokens.slice(i + 1))
                 if (closeIndex === -1) {
-                    throw "Unmatched parenthesis at character " + tokens[i].pos
+                    throw "Unmatched opening parenthesis at character " + tokens[i].pos
                 }
 
                 expressions.push(
@@ -94,6 +94,10 @@ function getSExpressionsTokens(tokens) {
                 i = i + closeIndex + 1
 
                 break
+
+            case "close":
+                throw "Unmatched closing parenthesis at character " + tokens[i].pos
+
             default:
                 expressions.push(tokens[i])
                 break
