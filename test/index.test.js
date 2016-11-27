@@ -13,6 +13,7 @@ const {
     getSExpressions,
     parse,
     generateCode,
+    evaluate,
 } = require("../")
 
 describe("tokenizer", () => {
@@ -162,5 +163,23 @@ describe("generateCode", () => {
 
     it("should generate function calls", () => {
         assert.equal(generateCode(parse("(plus 1 2 3)")), "plus(1,2,3)")
+    })
+})
+
+describe("evaluate", () => {
+    it("should return undefined for empty programs", () => {
+        assert.equal(undefined, evaluate(""))
+    })
+
+    it("should evaluate simple statements", () => {
+        assert.equal(1, evaluate("1"))
+    })
+
+    it("should evaluate function calls", () => {
+        assert.equal(5, evaluate("(Math.max 3 5 2 1)"))
+    })
+
+    it("should evaluate nested function calls", () => {
+        assert.equal(10, evaluate("(Math.max 1 3 (Math.max 5 10) 8 9)"))
     })
 })

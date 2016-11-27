@@ -146,10 +146,15 @@ function generateCode(ast) {
     }
 }
 
+function evaluate(input) {
+    return eval(generateCode(parse(input)))
+}
+
 module.exports = {
     tokenize,
     findClosingToken,
     getSExpressions,
     parse,
     generateCode,
+    evaluate,
 }
