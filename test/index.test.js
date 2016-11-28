@@ -157,12 +157,17 @@ describe("parser", () => {
 
 describe("generateCode", () => {
     it("should pipe through simple statements", () => {
-        assert.equal(generateCode(parse("10")), "10")
-        assert.equal(generateCode(parse("1 2 3")), "1;2;3")
+        assert.equal(generateCode("10"), "10")
+        assert.equal(generateCode("1 2 3"), "1;2;3")
     })
 
     it("should generate function calls", () => {
-        assert.equal(generateCode(parse("(plus 1 2 3)")), "plus(1,2,3)")
+        assert.equal(generateCode("(plus 1 2 3)"), "plus(1,2,3)")
+    })
+
+    it("should prefix with any necessary packages", () => {
+        const code = generateCode("(+ 1 2 3)")
+        assert(/function plus/.test(code))
     })
 })
 
@@ -180,7 +185,9 @@ describe("evaluate", () => {
     })
 
     it("should evaluate nested function calls", () => {
-        assert.equal(10, evaluate("(Math.max 1 3 (Math.max 5 10) 8 9)"))
+        assert.equal(29, evaluate("(+ 1 2 (* 4 5) 6)"))
+        assert.equal(100, evaluate("(car (list 100 200 300))"))
+        assert.deepEqual([100, 4, 5, 6], evaluate("(cons 100 (list 4 5 6))"))
     })
 
     it("should throw for invalid JS output", () => {

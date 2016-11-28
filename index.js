@@ -2,6 +2,8 @@
  *  Let's parse some lisp
  */
 
+const { proxy } = require("./proxy")
+
 function tokenize(str) {
     const tokens = []
 
@@ -135,12 +137,29 @@ function parseSExpressions(expression) {
     }
 }
 
-function generateCode(ast) {
+function generateCode(str) {
+    const packages = {}
+    let code = translateAst(parse(str), fn => {
+        packages[fn.name] = fn
+    })
+
+    // Prefix all necessary packages
+    for (let package in packages) {
+        if (packages.hasOwnProperty(package)) {
+            code = packages[package] + ";" + code
+        }
+    }
+
+    return code
+}
+
+function translateAst(ast, addPackage) {
     switch (ast.type) {
         case "Program":
-            return ast.body.map(generateCode).join(";")
+            return ast.body.map(statement => translateAst(statement, addPackage)).join(";")
         case "FunctionExpression":
-            return `${ast.name.content}(${ast.args.map(generateCode).join(",")})`
+            const name = proxy(ast.name.content, addPackage)
+            return `${name}(${ast.args.map(arg => translateAst(arg, addPackage)).join(",")})`
         case "Statement":
             return ast.content
     }
@@ -148,9 +167,8 @@ function generateCode(ast) {
 
 function evaluate(input) {
     try {
-        return eval(generateCode(parse(input)))
+        return eval(generateCode(input))
     } catch (e) {
-        console.trace()
         throw `Exception in resulting code: ${e.name}: ${e.message}`
     }
 }

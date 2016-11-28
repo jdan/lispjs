@@ -13,8 +13,10 @@ if (process.argv.length < 3) {
 } else {
     try {
         const input = process.argv[2]
+        const code = generateCode(input)
+
         if (showCode) {
-            console.log(generateCode(parse(input)))
+            console.log(code)
             console.log("---")
         }
 
