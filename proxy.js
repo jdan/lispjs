@@ -34,6 +34,10 @@ function list() {
     return [].slice.call(arguments)
 }
 
+function print() {
+    return console.log.apply(console, [].slice.call(arguments))
+}
+
 const fnMap = {
     "+": plus,
     "-": sub,
@@ -44,6 +48,7 @@ const fnMap = {
     car,
     cdr,
     list,
+    print,
 }
 
 function proxy(name, addPackage) {

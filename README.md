@@ -21,7 +21,9 @@ function plus() {
     return xs.slice(1)
 };function car(xs) {
     return xs[0]
-};console.log(car(cdr(list(1,mult(3,plus(4,5),6)))))
+};function print() {
+    return console.log.apply(console, [].slice.call(arguments))
+};print(car(cdr(list(1,mult(3,plus(4,5),6)))))
 ---
 162
 ```
