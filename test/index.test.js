@@ -59,28 +59,33 @@ describe("findClosingToken", () => {
 
 describe("s-expression generator", () => {
     it("should generate s-expressions from open and close tokens", () => {
-        assert.deepEqual(getSExpressions("(+ 1 2)"), [
-            [
+        assert.deepEqual(getSExpressions("(+ 1 2)"), [{
+            pos: 0,
+            children: [
                 { type: "word", token: "+", pos: 1 },
                 { type: "word", token: "1", pos: 3 },
                 { type: "word", token: "2", pos: 5 },
             ],
-        ])
+        }])
     })
 
     it("should handle nested s-expressions", () => {
-        assert.deepEqual(getSExpressions("(+ 1 (+ 2 3) 3)"), [
-            [
+        assert.deepEqual(getSExpressions("(+ 1 (+ 2 3) 3)"), [{
+            pos: 0,
+            children: [
                 { type: "word", token: "+", pos: 1 },
                 { type: "word", token: "1", pos: 3 },
-                [
-                    { type: "word", token: "+", pos: 6 },
-                    { type: "word", token: "2", pos: 8 },
-                    { type: "word", token: "3", pos: 10 },
-                ],
+                {
+                    pos: 5,
+                    children: [
+                        { type: "word", token: "+", pos: 6 },
+                        { type: "word", token: "2", pos: 8 },
+                        { type: "word", token: "3", pos: 10 },
+                    ],
+                },
                 { type: "word", token: "3", pos: 13 },
-            ]
-        ])
+            ],
+        }])
     })
 
     it("should always return an array", () => {
@@ -95,7 +100,7 @@ describe("s-expression generator", () => {
 })
 
 describe("parser", () => {
-    it("should evaluate single statements", () => {
+    it("should parse single statements", () => {
         assert.deepEqual(parse("1"), {
             type: "Program",
             body: [{
@@ -106,7 +111,7 @@ describe("parser", () => {
         })
     })
 
-    it("should evaluate multiple statements", () => {
+    it("should parse multiple statements", () => {
         assert.deepEqual(parse(`"hello"\n"world"`), {
             type: "Program",
             body: [
@@ -124,12 +129,13 @@ describe("parser", () => {
         })
     })
 
-    it("should evaluate function calls", () => {
+    it("should parse function calls", () => {
         assert.deepEqual(parse("(+ 3 4 5)"), {
             type: "Program",
             body: [{
                 type: "FunctionExpression",
-                name: {
+                function: {
+                    type: "Statement",
                     content: "+",
                     pos: 1,
                 },
@@ -150,6 +156,57 @@ describe("parser", () => {
                         pos: 7,
                     },
                 ],
+                pos: 0,
+            }],
+        })
+    })
+
+    it("should parse lambda expressions", () => {
+        assert.deepEqual(parse("(lambda (x y z) (+ x y z))"), {
+            type: "Program",
+            body: [{
+                type: "LambdaExpression",
+                params: [
+                    {
+                        content: "x",
+                        pos: 9,
+                    },
+                    {
+                        content: "y",
+                        pos: 11,
+                    },
+                    {
+                        content: "z",
+                        pos: 13,
+                    },
+                ],
+                body: {
+                    type: "FunctionExpression",
+                    function: {
+                        type: "Statement",
+                        content: "+",
+                        pos: 17,
+                    },
+                    args: [
+                        {
+                            type: "Statement",
+                            content: "x",
+                            pos: 19,
+                        },
+                        {
+                            type: "Statement",
+                            content: "y",
+                            pos: 21,
+                        },
+                        {
+                            type: "Statement",
+                            content: "z",
+                            pos: 23,
+                        },
+                    ],
+                    pos: 16,
+                },
+                pos: 0,
             }],
         })
     })
@@ -163,6 +220,16 @@ describe("generateCode", () => {
 
     it("should generate function calls", () => {
         assert.equal(generateCode("(plus 1 2 3)"), "plus(1,2,3)")
+    })
+
+    it("should generate anonymous functions", () => {
+        assert.equal(generateCode("(lambda (a b) (Math.max a b))"),
+            "(function(a,b){return Math.max(a,b)})")
+    })
+
+    it("should generate IIFEs", () => {
+        assert.equal(generateCode("((lambda (a b) (Math.max a b)) 3 5)"),
+            "(function(a,b){return Math.max(a,b)})(3,5)")
     })
 
     it("should prefix with any necessary packages", () => {
@@ -188,6 +255,10 @@ describe("evaluate", () => {
         assert.equal(29, evaluate("(+ 1 2 (* 4 5) 6)"))
         assert.equal(100, evaluate("(car (list 100 200 300))"))
         assert.deepEqual([100, 4, 5, 6], evaluate("(cons 100 (list 4 5 6))"))
+    })
+
+    it("should evaluate lambda expressions", () => {
+        assert.equal(14, evaluate("((lambda (a b) (* a b)) 7 2)"))
     })
 
     it("should throw for invalid JS output", () => {

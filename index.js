@@ -2,6 +2,7 @@
  *  Let's parse some lisp
  */
 
+const assert = require("assert")
 const { proxy } = require("./proxy")
 
 function tokenize(str) {
@@ -91,8 +92,10 @@ function getSExpressionsTokens(tokens) {
                     throw "Unmatched opening parenthesis at character " + tokens[i].pos
                 }
 
-                expressions.push(
-                    getSExpressionsTokens(tokens.slice(i + 1, i + closeIndex + 1)))
+                expressions.push({
+                    pos: tokens[i].pos,
+                    children: getSExpressionsTokens(tokens.slice(i + 1, i + closeIndex + 1)),
+                })
                 i = i + closeIndex + 1
 
                 break
@@ -119,14 +122,43 @@ function parse(str) {
 }
 
 function parseSExpressions(expression) {
-    if (Array.isArray(expression)) {
-        return {
-            type: "FunctionExpression",
-            name: {
-                content: expression[0].token,
-                pos: expression[0].pos,
-            },
-            args: expression.slice(1).map(parseSExpressions),
+    if (expression.children) {
+        const { children } = expression
+        switch (children[0].token) {
+            case "lambda":
+                // Assertions about the shape of lambda expressions
+                //
+                // Namely: the second child (argument list) should be a flat array,
+                // and the third child (the body) should be an array
+                assert(children[1].children,
+                    "Invalid syntax for lambda at character " + children[1].pos)
+                assert(children[1].children.every(child => child.type === "word"),
+                    "Invalid syntax for lambda at character " + children[1].pos)
+                assert(children[2].children,
+                    "Invalid syntax for lambda at character " + children[2].pos)
+
+                return {
+                    type: "LambdaExpression",
+                    params: children[1].children.map(expression => {
+                        return {
+                            content: expression.token,
+                            pos: expression.pos,
+                        }
+                    }),
+                    body: parseSExpressions(children[2]),
+                    pos: expression.pos,
+                }
+            default:
+                return {
+                    type: "FunctionExpression",
+                    // The first function we are invoking is not necessarily just a name. It
+                    // could be any expression which itself returns a function.
+                    //
+                    // For example, ((lambda (n) (+ n 2)) 7) is totally valid.
+                    function: parseSExpressions(children[0]),
+                    args: children.slice(1).map(parseSExpressions),
+                    pos: expression.pos,
+                }
         }
     } else {
         return {
@@ -158,8 +190,13 @@ function translateAst(ast, addPackage) {
         case "Program":
             return ast.body.map(statement => translateAst(statement, addPackage)).join(";")
         case "FunctionExpression":
-            const name = proxy(ast.name.content, addPackage)
-            return `${name}(${ast.args.map(arg => translateAst(arg, addPackage)).join(",")})`
+            const fn = proxy(translateAst(ast.function, addPackage), addPackage)
+            const args = ast.args.map(arg => translateAst(arg, addPackage)).join(",")
+            return `${fn}(${args})`
+        case "LambdaExpression":
+            const params = ast.params.map(param => param.content).join(",")
+            const body = translateAst(ast.body, addPackage)
+            return `(function(${params}){return ${body}})`
         case "Statement":
             return ast.content
     }
