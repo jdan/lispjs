@@ -165,11 +165,39 @@ function parseSExpressions(expression) {
                     pos: expression.pos,
                 }
 
+            case "cond":
+                // Cond is silly because it has a magic `else` argument
+                //
+                // TODO: assert `else` is last if it exists at all
+                const conditions = children.slice(1)
+                    .map(child => {
+                        const [condition, consequent] = child.children
+                        return {
+                            condition: parseSExpressions(condition),
+                            consequent: parseSExpressions(consequent),
+                        }
+                    })
+
+                const last = conditions[conditions.length - 1]
+                let elseCondition
+                if (last.condition.type === "Statement" &&
+                        last.condition.content === "else") {
+                    elseCondition = last
+                    conditions.pop()
+                }
+
+                return {
+                    type: "CondExpression",
+                    conditions,
+                    elseCondition,
+                }
+
             default:
                 return {
                     type: "FunctionExpression",
-                    // The first function we are invoking is not necessarily just a name. It
-                    // could be any expression which itself returns a function.
+                    // The first function we are invoking is not necessarily
+                    // just a name. It could be any expression which itself
+                    // returns a function.
                     //
                     // For example, ((lambda (n) (+ n 2)) 7) is totally valid.
                     function: parseSExpressions(children[0]),
@@ -219,6 +247,25 @@ function translateAst(ast, addPackage) {
             const consequent = translateAst(ast.consequent, addPackage)
             const alternate = translateAst(ast.alternate, addPackage)
             return `(${condition})?(${consequent}):(${alternate})`
+        case "CondExpression":
+            // We'll translate each condition into an if statement, where the
+            // body invokes `return`
+            const conditions = ast.conditions.map(child => {
+                const condition = translateAst(child.condition, addPackage)
+                const consequent = translateAst(child.consequent, addPackage)
+                return `if(${condition}){return ${consequent}}`
+            })
+
+            // We'll add `else` as a special case
+            if (ast.elseCondition) {
+                const consequent = translateAst(
+                    ast.elseCondition.consequent, addPackage)
+                conditions.push(`{return ${consequent}}`)
+            }
+
+            // Then we'll join everything with `else` to make `else-if`s, (and
+            // a trailing `else`), and wrap it all in a function
+            return `(function(){${conditions.join("else ")}})()`
         case "Statement":
             return ast.content
     }

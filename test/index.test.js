@@ -251,6 +251,42 @@ describe("parser", () => {
             parse("(if true 4)")
         }, /expected 3, was 2/)
     })
+
+    it("should parse cond expressions", () => {
+        assert.deepEqual(parse("(cond (x 1) (y 2))"), {
+            type: "Program",
+            body: [{
+                type: "CondExpression",
+                conditions: [
+                    {
+                        condition: {
+                            type: "Statement",
+                            content: "x",
+                            pos: 7,
+                        },
+                        consequent: {
+                            type: "Statement",
+                            content: "1",
+                            pos: 9,
+                        },
+                    },
+                    {
+                        condition: {
+                            type: "Statement",
+                            content: "y",
+                            pos: 13,
+                        },
+                        consequent: {
+                            type: "Statement",
+                            content: "2",
+                            pos: 15,
+                        },
+                    },
+                ],
+                elseCondition: undefined,
+            }]
+        })
+    })
 })
 
 describe("generateCode", () => {
@@ -268,13 +304,21 @@ describe("generateCode", () => {
             "(function(a,b){return Math.max(a,b)})")
     })
 
-    it("should generate IIFEs", () => {
+    it("should generate IIFEs for lambdas", () => {
         assert.equal(generateCode("((lambda (a b) (Math.max a b)) 3 5)"),
             "(function(a,b){return Math.max(a,b)})(3,5)")
     })
 
-    it("should generate ternaries", () => {
+    it("should generate ternaries for if statements", () => {
         assert.equal(generateCode("(if true 3 5)"), "(true)?(3):(5)")
+    })
+
+    it("should generate else-ifs for cond expressions", () => {
+        assert.equal(generateCode("(cond (false 7) (true 8))"),
+            "(function(){if(false){return 7}else if(true){return 8}})()")
+
+        assert.equal(generateCode("(cond (false 7) (else 8))"),
+            "(function(){if(false){return 7}else {return 8}})()")
     })
 
     it("should prefix with any necessary packages", () => {
@@ -311,6 +355,20 @@ describe("evaluate", () => {
             (if (> 1 2)
                 3
                 (if (>= 7 7) 17 10))`))
+    })
+
+    it("should evaluate cond expressions", () => {
+        assert.equal(300, evaluate(`
+            (cond ((> 2 3) 100)
+                  ((= 4 (Math.max 3 4 5)) 200)
+                  ((<= 3 10) (+ 1 299)))
+        `))
+
+        assert.equal(300, evaluate(`
+            (cond ((> 2 3) 100)
+                  ((= 4 (Math.max 3 4 5)) 200)
+                  (else (* 3 100)))
+        `))
     })
 
     it("should throw for invalid JS output", () => {
