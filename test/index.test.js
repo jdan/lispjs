@@ -292,6 +292,13 @@ describe("evaluate", () => {
         assert.equal(14, evaluate("((lambda (a b) (* a b)) 7 2)"))
     })
 
+    it("should evaluate if statements", () => {
+        assert.equal(17, evaluate(`
+            (if (> 1 2)
+                3
+                (if (>= 7 7) 17 10))`))
+    })
+
     it("should throw for invalid JS output", () => {
         assert.throws(() => {
             evaluate("(nada 1 2 3)")

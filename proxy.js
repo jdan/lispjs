@@ -18,6 +18,30 @@ function div() {
     return [].slice.call(arguments).reduce((a, b) => a / b, 1)
 }
 
+function eq(a, b) {
+    return a === b
+}
+
+function neq(a, b) {
+    return a !== b
+}
+
+function gt(a, b) {
+    return a > b
+}
+
+function gte(a, b) {
+    return a >= b
+}
+
+function lt(a, b) {
+    return a < b
+}
+
+function lte(a, b) {
+    return a <= b
+}
+
 function cons(x, xs) {
     return [x].concat(xs)
 }
@@ -43,6 +67,13 @@ const fnMap = {
     "-": sub,
     "*": mult,
     "/": div,
+
+    "=": eq,
+    "!=": neq,
+    ">": gt,
+    ">=": gte,
+    "<": lt,
+    "<=": lte,
 
     cons,
     car,
