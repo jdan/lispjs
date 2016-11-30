@@ -130,6 +130,9 @@ function parseSExpressions(expression) {
                 //
                 // Namely: the second child (argument list) should be a flat array,
                 // and the third child (the body) should be an array
+                assert(children.length === 3,
+                    `Invalid number of arguments for if statements (expected 2, ` +
+                    `was ${children.length - 1}) at ${expression.pos}`)
                 assert(children[1].children,
                     "Invalid syntax for lambda at character " + children[1].pos)
                 assert(children[1].children.every(child => child.type === "word"),
@@ -148,6 +151,20 @@ function parseSExpressions(expression) {
                     body: parseSExpressions(children[2]),
                     pos: expression.pos,
                 }
+
+            case "if":
+                assert(children.length === 4,
+                    `Invalid number of arguments for if statements (expected 3, ` +
+                    `was ${children.length - 1}) at ${expression.pos}`)
+
+                return {
+                    type: "IfStatement",
+                    condition: parseSExpressions(children[1]),
+                    consequent: parseSExpressions(children[2]),
+                    alternate: parseSExpressions(children[3]),
+                    pos: expression.pos,
+                }
+
             default:
                 return {
                     type: "FunctionExpression",
@@ -197,6 +214,11 @@ function translateAst(ast, addPackage) {
             const params = ast.params.map(param => param.content).join(",")
             const body = translateAst(ast.body, addPackage)
             return `(function(${params}){return ${body}})`
+        case "IfStatement":
+            const condition = translateAst(ast.condition, addPackage)
+            const consequent = translateAst(ast.consequent, addPackage)
+            const alternate = translateAst(ast.alternate, addPackage)
+            return `(${condition})?(${consequent}):(${alternate})`
         case "Statement":
             return ast.content
     }

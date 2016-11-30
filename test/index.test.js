@@ -210,6 +210,33 @@ describe("parser", () => {
             }],
         })
     })
+
+    // error tests for lambda, if
+
+    it("should parse if statements", () => {
+        assert.deepEqual(parse("(if true 3 5)"), {
+            type: "Program",
+            body: [{
+                type: "IfStatement",
+                pos: 0,
+                condition: {
+                    type: "Statement",
+                    content: "true",
+                    pos: 4,
+                },
+                consequent: {
+                    type: "Statement",
+                    content: "3",
+                    pos: 9,
+                },
+                alternate: {
+                    type: "Statement",
+                    content: "5",
+                    pos: 11,
+                },
+            }]
+        })
+    })
 })
 
 describe("generateCode", () => {
@@ -230,6 +257,10 @@ describe("generateCode", () => {
     it("should generate IIFEs", () => {
         assert.equal(generateCode("((lambda (a b) (Math.max a b)) 3 5)"),
             "(function(a,b){return Math.max(a,b)})(3,5)")
+    })
+
+    it("should generate ternaries", () => {
+        assert.equal(generateCode("(if true 3 5)"), "(true)?(3):(5)")
     })
 
     it("should prefix with any necessary packages", () => {
