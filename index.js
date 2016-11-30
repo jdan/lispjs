@@ -131,7 +131,7 @@ function parseSExpressions(expression) {
                 // Namely: the second child (argument list) should be a flat array,
                 // and the third child (the body) should be an array
                 assert(children.length === 3,
-                    `Invalid number of arguments for if statements (expected 2, ` +
+                    `Invalid number of arguments for lambda expression (expected 2, ` +
                     `was ${children.length - 1}) at ${expression.pos}`)
                 assert(children[1].children,
                     "Invalid syntax for lambda at character " + children[1].pos)

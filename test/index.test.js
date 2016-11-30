@@ -211,7 +211,15 @@ describe("parser", () => {
         })
     })
 
-    // error tests for lambda, if
+    it("should throw for an invalid number of arguments to lambda", () => {
+        assert.throws(() => {
+            parse("(lambda)")
+        }, /expected 2, was 0/)
+
+        assert.throws(() => {
+            parse("(lambda (a b))")
+        }, /expected 2, was 1/)
+    })
 
     it("should parse if statements", () => {
         assert.deepEqual(parse("(if true 3 5)"), {
@@ -236,6 +244,12 @@ describe("parser", () => {
                 },
             }]
         })
+    })
+
+    it("should throw for an invalid number of arguments to if", () => {
+        assert.throws(() => {
+            parse("(if true 4)")
+        }, /expected 3, was 2/)
     })
 })
 
