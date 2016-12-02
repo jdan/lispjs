@@ -257,6 +257,7 @@ describe("parser", () => {
             type: "Program",
             body: [{
                 type: "CondExpression",
+                pos: 0,
                 conditions: [
                     {
                         condition: {
@@ -285,6 +286,63 @@ describe("parser", () => {
                 ],
                 elseCondition: undefined,
             }]
+        })
+    })
+
+    it("should parse let expressions", () => {
+        assert.deepEqual(parse("(let ((x 1) (y 2)) (+ x y))"), {
+            type: "Program",
+            body: [{
+                type: "LetExpression",
+                pos: 0,
+                assignments: [
+                    {
+                        binding: {
+                            type: "Statement",
+                            content: "x",
+                            pos: 7,
+                        },
+                        value: {
+                            type: "Statement",
+                            content: "1",
+                            pos: 9,
+                        }
+                    },
+                    {
+                        binding: {
+                            type: "Statement",
+                            content: "y",
+                            pos: 13,
+                        },
+                        value: {
+                            type: "Statement",
+                            content: "2",
+                            pos: 15,
+                        },
+                    },
+                ],
+                body: {
+                    type: "FunctionExpression",
+                    pos: 19,
+                    function: {
+                        type: "Statement",
+                        content: "+",
+                        pos: 20,
+                    },
+                    args: [
+                        {
+                            type: "Statement",
+                            content: "x",
+                            pos: 22,
+                        },
+                        {
+                            type: "Statement",
+                            content: "y",
+                            pos: 24,
+                        },
+                    ],
+                },
+            }],
         })
     })
 })
@@ -319,6 +377,11 @@ describe("generateCode", () => {
 
         assert.equal(generateCode("(cond (false 7) (else 8))"),
             "(function(){if(false){return 7}else {return 8}})()")
+    })
+
+    it("should generate lets for let expressions", () => {
+        assert.equal(generateCode("(let ((x 1)) x)"),
+            "(function(){let x=1;return x})()")
     })
 
     it("should prefix with any necessary packages", () => {
@@ -369,6 +432,19 @@ describe("evaluate", () => {
                   ((= 4 (Math.max 3 4 5)) 200)
                   (else (* 3 100)))
         `))
+    })
+
+    it("should evaluate let expressions", () => {
+        assert.equal(7, evaluate("(let ((x 2) (y 5)) (+ x y))"))
+        assert.equal(13, evaluate(`
+            (let ((x 3))
+                (let ((y 10)) (+ x y)))
+        `))
+
+				assert.equal(2500, evaluate(`
+					(let ((square (lambda (n) (* n n))))
+						(square 50))
+				`))
     })
 
     it("should throw for invalid JS output", () => {

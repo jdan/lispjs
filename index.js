@@ -190,6 +190,23 @@ function parseSExpressions(expression) {
                     type: "CondExpression",
                     conditions,
                     elseCondition,
+                    pos: expression.pos,
+                }
+
+	    			case "let":
+            case "let*":
+                const assignments = children[1].children.map(assignment => {
+                    return {
+                        binding: parseSExpressions(assignment.children[0]),
+                        value: parseSExpressions(assignment.children[1]),
+                    }
+                })
+
+                return {
+                    type: "LetExpression",
+                    assignments,
+                    body: parseSExpressions(children[2]),
+                    pos: expression.pos,
                 }
 
             default:
@@ -266,6 +283,14 @@ function translateAst(ast, addPackage) {
             // Then we'll join everything with `else` to make `else-if`s, (and
             // a trailing `else`), and wrap it all in a function
             return `(function(){${conditions.join("else ")}})()`
+        case "LetExpression":
+            const assignments = ast.assignments.map(assignment => {
+                const value = translateAst(assignment.value, addPackage)
+                return `let ${assignment.binding.content}=${value}`
+            }).join(";")
+
+            const letBody = translateAst(ast.body, addPackage)
+            return `(function(){${assignments};return ${letBody}})()`
         case "Statement":
             return ast.content
     }
