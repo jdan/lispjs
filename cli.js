@@ -1,27 +1,43 @@
-const { generateCode, parse, evaluate } = require("./")
+const fs = require("fs")
+const { argv } = require("optimist")
+const { generateCode, evaluate } = require("./")
 
-let showCode = false
-const showIndex = process.argv.findIndex(arg => arg === "--show")
-if (showIndex > -1) {
-    showCode = true
-    process.argv.splice(showIndex, 1)
+function usage() {
+    console.log("Usage: ./cli [--output=file] [--no-eval] file")
+    process.exit(1)
 }
 
-if (process.argv.length < 3) {
-    console.log("Usage: ./cli [--show] code")
-    process.exit(1)
-} else {
-    try {
-        const input = process.argv[2]
-        const code = generateCode(input)
+if (!argv._.length) {
+    usage()
+}
 
-        if (showCode) {
-            console.log(code)
-            console.log("---")
+try {
+    const inputFile = argv._[0]
+
+    if (!fs.existsSync(inputFile)) {
+        console.log("Input file not found.")
+        usage()
+    }
+
+    fs.readFile(inputFile, "utf-8", (err, contents) => {
+        if (err) {
+            console.log(err)
+            usage()
         }
 
-        evaluate(input)
-    } catch (e) {
-        console.log(e)
-    }
+        const output = generateCode(contents)
+
+        if (argv.output) {
+            fs.writeFileSync(argv.output, "utf-8", output)
+        }
+
+        if (argv.eval === false) {
+            console.log(output)
+        } else {
+            evaluate(contents)
+        }
+    })
+} catch (e) {
+    console.log(e)
+    process.exit(1)
 }
