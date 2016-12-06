@@ -345,6 +345,54 @@ describe("parser", () => {
             }],
         })
     })
+
+    it("should parse function declarations", () => {
+        assert.deepEqual(parse("(define (add x y) (+ x y))"), {
+            type: "Program",
+            body: [{
+                type: "FunctionDeclaration",
+                pos: 0,
+                name: {
+                    type: "Statement",
+                    content: "add",
+                    pos: 9,
+                },
+                params: [
+                    {
+                        type: "Statement",
+                        content: "x",
+                        pos: 13,
+                    },
+                    {
+                        type: "Statement",
+                        content: "y",
+                        pos: 15,
+                    },
+                ],
+                body: {
+                    type: "FunctionExpression",
+                    pos: 18,
+                    function: {
+                        type: "Statement",
+                        content: "+",
+                        pos: 19,
+                    },
+                    args: [
+                        {
+                            type: "Statement",
+                            content: "x",
+                            pos: 21,
+                        },
+                        {
+                            type: "Statement",
+                            content: "y",
+                            pos: 23,
+                        },
+                    ],
+                },
+            }],
+        })
+    })
 })
 
 describe("generateCode", () => {
@@ -382,6 +430,11 @@ describe("generateCode", () => {
     it("should generate lets for let expressions", () => {
         assert.equal(generateCode("(let ((x 1)) x)"),
             "(function(){let x=1;return x})()")
+    })
+
+    it("should generate named functions for function declarations", () => {
+        assert.equal(generateCode("(define (f x) (g x 5))"),
+            "function f(x){return g(x,5)}")
     })
 
     it("should prefix with any necessary packages", () => {

@@ -193,7 +193,7 @@ function parseSExpressions(expression) {
                     pos: expression.pos,
                 }
 
-	    			case "let":
+            case "let":
             case "let*":
                 const assignments = children[1].children.map(assignment => {
                     return {
@@ -205,6 +205,19 @@ function parseSExpressions(expression) {
                 return {
                     type: "LetExpression",
                     assignments,
+                    body: parseSExpressions(children[2]),
+                    pos: expression.pos,
+                }
+
+            case "define":
+                const name = parseSExpressions(children[1].children[0])
+                const params = children[1].children.slice(1).map(parseSExpressions)
+                // TODO: params can be null! children[1] can be a statement
+                
+                return {
+                    type: "FunctionDeclaration",
+                    name,
+                    params,
                     body: parseSExpressions(children[2]),
                     pos: expression.pos,
                 }
@@ -291,6 +304,11 @@ function translateAst(ast, addPackage) {
 
             const letBody = translateAst(ast.body, addPackage)
             return `(function(){${assignments};return ${letBody}})()`
+        case "FunctionDeclaration":
+            const name = translateAst(ast.name, addPackage)
+            const fparams = ast.params.map(p => p.content).join(",")
+            const fbody = translateAst(ast.body, addPackage)
+            return `function ${name}(${fparams}){return ${fbody}}`
         case "Statement":
             return ast.content
     }
