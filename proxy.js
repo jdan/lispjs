@@ -15,7 +15,8 @@ function mult() {
 }
 
 function div() {
-    return [].slice.call(arguments).reduce((a, b) => a / b, 1)
+    const args = [].slice.call(arguments)
+    return args.slice(1).reduce((a, b) => a / b, args[0])
 }
 
 function eq(a, b) {
@@ -42,6 +43,10 @@ function lte(a, b) {
     return a <= b
 }
 
+function mod(a, b) {
+    return a % b
+}
+
 function cons(x, xs) {
     return [x].concat(xs)
 }
@@ -58,6 +63,10 @@ function list() {
     return [].slice.call(arguments)
 }
 
+function reverse(xs) {
+    return xs.slice().reverse()
+}
+
 function print() {
     return console.log.apply(console, [].slice.call(arguments))
 }
@@ -67,8 +76,11 @@ const fnMap = {
     "-": sub,
     "*": mult,
     "/": div,
+    "%": mod,
+    "modulo": mod,
 
     "=": eq,
+    "==": eq,
     "!=": neq,
     ">": gt,
     ">=": gte,
@@ -79,6 +91,7 @@ const fnMap = {
     car,
     cdr,
     list,
+    reverse,
     print,
 }
 
