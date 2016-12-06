@@ -213,7 +213,9 @@ function parseSExpressions(expression) {
                 const name = parseSExpressions(children[1].children[0])
                 const params = children[1].children.slice(1).map(parseSExpressions)
                 // TODO: params can be null! children[1] can be a statement
-                
+                // TODO: body can be multiple statements and we should only
+                // return the last one
+
                 return {
                     type: "FunctionDeclaration",
                     name,
