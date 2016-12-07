@@ -534,10 +534,41 @@ describe("evaluate", () => {
                 (let ((y 10)) (+ x y)))
         `))
 
-				assert.equal(2500, evaluate(`
-					(let ((square (lambda (n) (* n n))))
-						(square 50))
-				`))
+        assert.equal(2500, evaluate(`
+            (let ((square (lambda (n) (* n n))))
+                (square 50))
+        `))
+    })
+
+    it("should evaluate variable definitions", () => {
+        let result = null
+        global.setResult = (x) => {
+            result = x
+        }
+
+        evaluate(`
+            (define f (- 16 7))
+            (global.setResult f)
+        `)
+
+        assert.equal(result, 9)
+    })
+
+    it("should evaluate function definitions", () => {
+        let result = null
+        global.setResult = (x) => {
+            result = x
+        }
+
+        evaluate(`
+            (define (factorial n)
+                (if (== n 0)
+                    1
+                    (* n (factorial (- n 1)))))
+            (global.setResult (factorial 5))
+        `)
+
+        assert.equal(result, 120)
     })
 
     it("should throw for invalid JS output", () => {
