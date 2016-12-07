@@ -383,7 +383,7 @@ describe("parser", () => {
     })
 
     it("should parse function definitions", () => {
-        assert.deepEqual(parse("(define (add x y) (+ x y))"), {
+        assert.deepEqual(parse("(define (add x y) 1 (+ x y))"), {
             type: "Program",
             body: [{
                 type: "FunctionDefinition",
@@ -405,27 +405,34 @@ describe("parser", () => {
                         pos: 15,
                     },
                 ],
-                body: {
-                    type: "FunctionExpression",
-                    pos: 18,
-                    function: {
+                proc: [
+                    {
                         type: "Statement",
-                        content: "+",
-                        pos: 19,
+                        content: "1",
+                        pos: 18,
                     },
-                    args: [
-                        {
+                    {
+                        type: "FunctionExpression",
+                        pos: 20,
+                        function: {
                             type: "Statement",
-                            content: "x",
+                            content: "+",
                             pos: 21,
                         },
-                        {
-                            type: "Statement",
-                            content: "y",
-                            pos: 23,
-                        },
-                    ],
-                },
+                        args: [
+                            {
+                                type: "Statement",
+                                content: "x",
+                                pos: 23,
+                            },
+                            {
+                                type: "Statement",
+                                content: "y",
+                                pos: 25,
+                            },
+                        ],
+                    },
+                ],
             }],
         })
     })
@@ -475,6 +482,11 @@ describe("generateCode", () => {
     it("should generate named functions for function declarations", () => {
         assert.equal(generateCode("(define (f x) (g x 5))"),
             "function f(x){return g(x,5)}")
+    })
+
+    it("should handle procedures inside function declarations", () => {
+        assert.equal(generateCode("(define (f x) (g x 5) (h x 6))"),
+            "function f(x){g(x,5);return h(x,6)}")
     })
 
     it("should prefix with any necessary packages", () => {
@@ -562,13 +574,15 @@ describe("evaluate", () => {
 
         evaluate(`
             (define (factorial n)
-                (if (== n 0)
-                    1
-                    (* n (factorial (- n 1)))))
-            (global.setResult (factorial 5))
+                (define (inner n acc)
+                    (if (== n 0)
+                        acc
+                        (inner (- n 1) (* acc n))))
+                (inner n 1))
+            (global.setResult (factorial 6))
         `)
 
-        assert.equal(result, 120)
+        assert.equal(result, 720)
     })
 
     it("should throw for invalid JS output", () => {

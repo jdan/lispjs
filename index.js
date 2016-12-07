@@ -213,14 +213,12 @@ function parseSExpressions(expression) {
                 if (children[1].children) {
                     const name = parseSExpressions(children[1].children[0])
                     const params = children[1].children.slice(1).map(parseSExpressions)
-                    // TODO: body can be multiple statements and we should only
-                    // return the last one
 
                     return {
                         type: "FunctionDefinition",
                         name,
                         params,
-                        body: parseSExpressions(children[2]),
+                        proc: children.slice(2).map(parseSExpressions),
                         pos: expression.pos,
                     }
                 } else {
@@ -323,8 +321,12 @@ function translateAst(ast, addPackage) {
         case "FunctionDefinition":
             const name = translateAst(ast.name, addPackage)
             const fparams = ast.params.map(p => p.content).join(",")
-            const fbody = translateAst(ast.body, addPackage)
-            return `function ${name}(${fparams}){return ${fbody}}`
+
+            const proc = ast.proc.map(expr => translateAst(expr, addPackage))
+            const tail = `return ${proc.pop()}`
+            const functionBody = proc.concat([tail]).join(";")
+
+            return `function ${name}(${fparams}){${functionBody}}`
         case "Statement":
             return ast.content
     }
