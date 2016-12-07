@@ -7,7 +7,8 @@ function plus() {
 }
 
 function sub() {
-    return [].slice.call(arguments).reduce((a, b) => a - b, 0)
+    const args = [].slice.call(arguments)
+    return args.slice(1).reduce((a, b) => a - b, args[0])
 }
 
 function mult() {
