@@ -346,11 +346,11 @@ describe("parser", () => {
         })
     })
 
-    it("should parse function declarations", () => {
+    it("should parse function definitions", () => {
         assert.deepEqual(parse("(define (add x y) (+ x y))"), {
             type: "Program",
             body: [{
-                type: "FunctionDeclaration",
+                type: "FunctionDefinition",
                 pos: 0,
                 name: {
                     type: "Statement",

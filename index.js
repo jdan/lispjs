@@ -217,7 +217,7 @@ function parseSExpressions(expression) {
                 // return the last one
 
                 return {
-                    type: "FunctionDeclaration",
+                    type: "FunctionDefinition",
                     name,
                     params,
                     body: parseSExpressions(children[2]),
@@ -306,7 +306,7 @@ function translateAst(ast, addPackage) {
 
             const letBody = translateAst(ast.body, addPackage)
             return `(function(){${assignments};return ${letBody}})()`
-        case "FunctionDeclaration":
+        case "FunctionDefinition":
             const name = translateAst(ast.name, addPackage)
             const fparams = ast.params.map(p => p.content).join(",")
             const fbody = translateAst(ast.body, addPackage)
