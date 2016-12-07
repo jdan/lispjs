@@ -210,18 +210,28 @@ function parseSExpressions(expression) {
                 }
 
             case "define":
-                const name = parseSExpressions(children[1].children[0])
-                const params = children[1].children.slice(1).map(parseSExpressions)
-                // TODO: params can be null! children[1] can be a statement
-                // TODO: body can be multiple statements and we should only
-                // return the last one
+                if (children[1].children) {
+                    const name = parseSExpressions(children[1].children[0])
+                    const params = children[1].children.slice(1).map(parseSExpressions)
+                    // TODO: body can be multiple statements and we should only
+                    // return the last one
 
-                return {
-                    type: "FunctionDefinition",
-                    name,
-                    params,
-                    body: parseSExpressions(children[2]),
-                    pos: expression.pos,
+                    return {
+                        type: "FunctionDefinition",
+                        name,
+                        params,
+                        body: parseSExpressions(children[2]),
+                        pos: expression.pos,
+                    }
+                } else {
+                    const name = parseSExpressions(children[1])
+
+                    return {
+                        type: "VariableDefinition",
+                        name,
+                        body: parseSExpressions(children[2]),
+                        pos: expression.pos,
+                    }
                 }
 
             default:
@@ -306,6 +316,10 @@ function translateAst(ast, addPackage) {
 
             const letBody = translateAst(ast.body, addPackage)
             return `(function(){${assignments};return ${letBody}})()`
+        case "VariableDefinition":
+            const vname = translateAst(ast.name, addPackage)
+            const vbody = translateAst(ast.body, addPackage)
+            return `const ${vname}=${vbody}`
         case "FunctionDefinition":
             const name = translateAst(ast.name, addPackage)
             const fparams = ast.params.map(p => p.content).join(",")

@@ -346,6 +346,42 @@ describe("parser", () => {
         })
     })
 
+    it("should parse variable definitions", () => {
+        assert.deepEqual(parse("(define z (* 3 4))"), {
+            type: "Program",
+            body: [{
+                type: "VariableDefinition",
+                pos: 0,
+                name: {
+                    type: "Statement",
+                    content: "z",
+                    pos: 8,
+                },
+                body: {
+                    type: "FunctionExpression",
+                    pos: 10,
+                    function: {
+                        type: "Statement",
+                        content: "*",
+                        pos: 11,
+                    },
+                    args: [
+                        {
+                            type: "Statement",
+                            content: "3",
+                            pos: 13,
+                        },
+                        {
+                            type: "Statement",
+                            content: "4",
+                            pos: 15,
+                        },
+                    ],
+                },
+            }],
+        })
+    })
+
     it("should parse function definitions", () => {
         assert.deepEqual(parse("(define (add x y) (+ x y))"), {
             type: "Program",
@@ -430,6 +466,10 @@ describe("generateCode", () => {
     it("should generate lets for let expressions", () => {
         assert.equal(generateCode("(let ((x 1)) x)"),
             "(function(){let x=1;return x})()")
+    })
+
+    it("should generate consts for variable definitions", () => {
+        assert.equal(generateCode("(define x (f 1 2 3))"), "const x=f(1,2,3)")
     })
 
     it("should generate named functions for function declarations", () => {
