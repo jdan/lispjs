@@ -4,6 +4,8 @@ Let's compile Lisp into JavaScript using JavaScript
 
 Check out the [unit tests](https://github.com/jdan/lispjs/blob/master/test/index.test.js) for a good idea of how this works.
 
+See [scheme-to-js](https://github.com/jdan/scheme-to-js) for a similar effort, written in Scheme.
+
 ## Usage
 
 ```
